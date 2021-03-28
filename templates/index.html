@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+  <title>PQApp</title>
+</head>
+<body>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+<div>
+  <h1>PQ SENSOR DATA</h1>
+  <h3>Data in bucket</h3>
+</div>
+
+<ul>
+  {% for blob in blobs %}
+  <a href="/graph?name={{blob.name}}"><li>{{blob.name}}</li></a>
+  <li>{{blob.media_link}}</li>
+  {% endfor %}
+</ul>
+
+</body>
+</html>
