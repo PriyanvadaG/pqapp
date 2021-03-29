@@ -20,10 +20,10 @@
 
 <ul>
   {% for blob in blobs %}
-  <a href="/graph?name={{blob.name}}"><li>{{blob.name}}</li></a>
-  <li>{{blob.media_link}}</li>
+  <a href="/content?name={{blob.name}}"><li>{{blob.name}}</li></a>
   {% endfor %}
 </ul>
+<a href="/graph">GRAPHS!</a>
 
 </body>
 </html>

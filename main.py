@@ -1,30 +1,12 @@
 import io
 import logging
-import os
 import datetime as dt
 
-from google.cloud import pubsub_v1
-from google.cloud import storage
-from flask import Flask, render_template, request, redirect, url_for, flash
-import pandas as pd
+from flask import render_template, request, redirect, url_for, flash
 
+from dash_plot import init_dashboard
 
-app = Flask(__name__)
-
-app.config['PUBSUB_VERIFICATION_TOKEN'] = \
-    os.environ['PUBSUB_VERIFICATION_TOKEN']
-app.config['PUBSUB_TOPIC'] = os.environ['PUBSUB_TOPIC']
-app.config['PUB_TOPIC'] = os.environ['PUB_TOPIC']
-app.config['GOOGLE_CLOUD_PROJECT'] = os.environ['GOOGLE_CLOUD_PROJECT']
-app.config['CLOUD_STORAGE_BUCKET'] = os.environ['CLOUD_STORAGE_BUCKET']
-
-app.config['FOLDER_NAME'] = os.environ.get("FOLDER_NAME", "test-data")
-
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
-
-gcs_client = storage.Client()
-bucket = gcs_client.get_bucket(app.config['CLOUD_STORAGE_BUCKET'])
-publisher = pubsub_v1.PublisherClient()
+from common import app, gcs_client, bucket, publisher
 
 
 def getDates():
@@ -37,12 +19,10 @@ def getDates():
                 for i in range(24)],
             "minutes": [
                 f'{i:02}'
-                for i in range(60)
-            ],
+                for i in range(60)],
             "seconds": [
                 f'{i:02}'
-                for i in range(60)
-            ]}
+                for i in range(60)]}
 
 
 @app.route('/', methods=['GET'])
@@ -54,17 +34,16 @@ def index():
     return render_template('index.html', blobs=blobs)
 
 
-@app.route("/graph", methods=['GET'])
-def graph():
+@app.route("/content", methods=['GET'])
+def content():
     blob_name = request.args["name"]
     blob_content = io.BytesIO()
 
     gcs_client.download_blob_to_file(
         f"gs://{app.config['CLOUD_STORAGE_BUCKET']}/{blob_name}", blob_content)
+    # df = pd.read_csv(io.StringIO(blob_content.getvalue().decode("utf-8")))
 
-    df = pd.read_csv(io.StringIO(blob_content.getvalue().decode("utf-8")))
-
-    return df.to_dict()
+    return blob_content.getvalue().decode("utf-8").replace("\n", "<br/>")
 
 
 @app.route('/fetch-data', methods=["GET", "POST"])
@@ -100,6 +79,8 @@ def server_error(e):
     See logs for full stacktrace.
     """.format(e), 500
 
+
+app = init_dashboard(app)
 
 if __name__ == '__main__':
     # This is used when running locally. Gunicorn is used to run the
